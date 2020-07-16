@@ -91,7 +91,9 @@ namespace HarvestHelpers
 
         public override void Render()
         {
-            DrawInventSeeds();
+            if (GameController.IngameState.IngameUi.InventoryPanel.IsVisible)
+                DrawInventSeeds();
+
             var isOnMap = Vector2.Distance(GameController.Player.GridPos, _groveCenter) < 400;
             if (!isOnMap)
             {
@@ -112,7 +114,7 @@ namespace HarvestHelpers
             }
 
             Graphics.DrawText($"Hide: press '{Settings.Toggle.Value}' button",
-                new nuVector2(Settings.PosX, Settings.PosY - 17), Color.White);
+                new nuVector2(Settings.PosX, Settings.PosY - 17), Color.White, "Default:13");
 
             ImGui.SetNextWindowPos(new nuVector2(Settings.PosX, Settings.PosY), ImGuiCond.Once, nuVector2.Zero);
             ImGui.SetNextWindowSize(new nuVector2(Settings.Width - 20, Settings.Height), ImGuiCond.Always);
@@ -193,17 +195,17 @@ namespace HarvestHelpers
 
         private void DrawInventSeeds()
         {
-            var skillRect = GameController.Game.IngameState.IngameUi.SkillBar.GetClientRect();
-            var drawRect = skillRect;
+            var inventoryRect = GameController.Game.IngameState.IngameUi.InventoryPanel.GetChildAtIndex(2).GetClientRect();
+            var drawRect = inventoryRect;
+            drawRect.Y += inventoryRect.Height;
+            drawRect.X += 10;
             drawRect.Width = 50;
             drawRect.Height = 20;
-            drawRect.Y -= 40;
-            drawRect.X += 100;
 
             for (var i = 0; i < 3; i++)
             {
                 Graphics.DrawBox(drawRect, _fluidColors[i]);
-                Graphics.DrawText(_inventSeeds[i].ToString(), drawRect.Center.Translate(0, -6), Color.Black,
+                Graphics.DrawText(_inventSeeds[i].ToString(), drawRect.Center.Translate(0, -6), Color.Black, "Default:13", 
                     FontAlign.Center);
                 drawRect.X += drawRect.Width;
             }
@@ -212,8 +214,17 @@ namespace HarvestHelpers
                 return;
             _inventSeedsDelayStopwatch.Restart();
 
-            var items =
-                GameController.Game.IngameState.ServerData.GetPlayerInventoryBySlot(InventorySlotE.MainInventory1);
+            ServerInventory items;
+
+            try
+            {
+                items = GameController.Game.IngameState.ServerData.GetPlayerInventoryBySlot(InventorySlotE.MainInventory1);
+            }
+            catch (NullReferenceException e)
+            {
+                LogError($"{Name}: {e.Message}");
+                return;
+            }
 
             _inventSeeds[0] = 0;
             _inventSeeds[1] = 0;
@@ -264,7 +275,7 @@ namespace HarvestHelpers
             _mapController.Draw(mapDrawFrame);
 
             Graphics.DrawText("Resize ->", new nuVector2(mapDrawFrame.Right - 80, mapDrawFrame.Bottom - 15),
-                Color.White);
+                Color.White, "Default:13");
 
             var playerPos = GameController.Player.GridPos;
             var drawPos = _mapController.GridPosToMapPos(playerPos);
@@ -314,11 +325,11 @@ namespace HarvestHelpers
             if (_errorStringBuilder.Length > 0)
                 Graphics.DrawText(_errorStringBuilder.ToString(),
                     new nuVector2(10, 200),
-                    Color.Red);
+                    Color.Red, "Default:13");
 
             var windowRectangle = GameController.Window.GetWindowRectangle();
             var drawPos = new Vector2(windowRectangle.X + windowRectangle.Width / 2, windowRectangle.Height - 50);
-            var barWidth = 200f;
+            var barWidth = 210f;
 
             for (var i = 0; i < 3; i++)
             {
@@ -337,13 +348,13 @@ namespace HarvestHelpers
 
                 var testPos = new nuVector2(rect.X + 5, rect.Y - 15);
                 var textSize = Graphics.DrawText($"Available: {_availableFluid[i]} Required:{_requiredFluid[i]}",
-                    testPos, isFine ? Color.White : Color.Red);
+                    testPos, isFine ? Color.White : Color.Red, "Default:13");
                 Graphics.DrawBox(new RectangleF(testPos.X, testPos.Y, textSize.X, textSize.Y), Color.Black);
 
                 var center = rect.Center;
                 testPos = new nuVector2(center.X, center.Y - 7);
                 textSize = Graphics.DrawText($"Fill: {progressDelta:P1} ({_fluidAmount[i]} of {_fluidCapacity[i]})",
-                    testPos, isFine ? Color.White : Color.Red, 15, FontAlign.Center);
+                    testPos, isFine ? Color.White : Color.Red, 15, "Default:13", FontAlign.Center);
                 Graphics.DrawBox(new RectangleF(testPos.X - textSize.X / 2 - 5, testPos.Y, textSize.X + 10, textSize.Y),
                     Color.Black);
             }
