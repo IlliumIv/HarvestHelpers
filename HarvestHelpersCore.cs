@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -46,6 +47,8 @@ namespace HarvestHelpers
 
         private readonly List<Tuple<string, string, Color>> _craftListHighlight;
 
+        public static string fontName;
+
         public HarvestHelpersCore()
         {
             _fluidColors = new[]
@@ -69,7 +72,24 @@ namespace HarvestHelpers
             Input.RegisterKey(Settings.Toggle.Value);
             Settings.FixOutOfScreen.OnPressed += FixOutOfScreen;
             ResetCenter();
+
+            UseDefaultFont_OnValueChanged(Settings.UseDefaultFont, Settings.UseDefaultFont.Value);
+            Settings.UseDefaultFont.OnValueChanged += UseDefaultFont_OnValueChanged;
+
             return true;
+        }
+
+        private void UseDefaultFont_OnValueChanged(object sender, bool e)
+        {
+            switch (e) {
+                case true:
+                    fontName = "Default:13";
+                    break;
+                case false:
+                    var font = Graphics.Font.Name.Substring(6);
+                    fontName = $"{font.Substring(0, font.Length - 4)}:{Graphics.Font.Size}";
+                    break;
+            }
         }
 
         private void FixOutOfScreen()
@@ -115,7 +135,7 @@ namespace HarvestHelpers
             }
 
             Graphics.DrawText($"Hide: press '{Settings.Toggle.Value}' button",
-                new nuVector2(Settings.PosX, Settings.PosY - 17), Color.White, "Default:13");
+                new nuVector2(Settings.PosX, Settings.PosY - 17), Color.White, fontName);
 
             ImGui.SetNextWindowPos(new nuVector2(Settings.PosX, Settings.PosY), ImGuiCond.Once, nuVector2.Zero);
             ImGui.SetNextWindowSize(new nuVector2(Settings.Width - 20, Settings.Height), ImGuiCond.Always);
@@ -206,7 +226,7 @@ namespace HarvestHelpers
             for (var i = 0; i < 3; i++)
             {
                 Graphics.DrawBox(drawRect, _fluidColors[i]);
-                Graphics.DrawText(_inventSeeds[i].ToString(), drawRect.Center.Translate(0, -6), Color.Black, "Default:13", 
+                Graphics.DrawText(_inventSeeds[i].ToString(), drawRect.Center.Translate(0, -6), Color.Black, fontName, 
                     FontAlign.Center);
                 drawRect.X += drawRect.Width;
             }
@@ -271,7 +291,7 @@ namespace HarvestHelpers
             _mapController.Draw(mapDrawFrame);
 
             Graphics.DrawText("Resize ->", new nuVector2(mapDrawFrame.Right - 80, mapDrawFrame.Bottom - 15),
-                Color.White, "Default:13");
+                Color.White, fontName);
 
             var playerPos = GameController.Player.GridPos;
             var drawPos = _mapController.GridPosToMapPos(playerPos);
@@ -321,7 +341,7 @@ namespace HarvestHelpers
             if (_errorStringBuilder.Length > 0)
                 Graphics.DrawText(_errorStringBuilder.ToString(),
                     new nuVector2(10, 200),
-                    Color.Red, "Default:13");
+                    Color.Red, fontName);
 
             var windowRectangle = GameController.Window.GetWindowRectangle();
             var drawPos = new Vector2(windowRectangle.X + windowRectangle.Width / 2, windowRectangle.Height - 50);
@@ -347,13 +367,13 @@ namespace HarvestHelpers
 
                 var testPos = new nuVector2(rect.X + 5, rect.Y - 15);
                 var textSize = Graphics.DrawText($"Available: {_availableFluid[i]} Required:{_requiredFluid[i]}",
-                    testPos, isFine ? Color.White : Color.Red, "Default:13");
+                    testPos, isFine ? Color.White : Color.Red, fontName);
                 Graphics.DrawBox(new RectangleF(testPos.X, testPos.Y, textSize.X, textSize.Y), Color.Black);
 
                 var center = rect.Center;
                 testPos = new nuVector2(center.X, center.Y - 7);
                 textSize = Graphics.DrawText($"Fill: {progressDelta:P1} ({_fluidAmount[i]} of {_fluidCapacity[i]})",
-                    testPos, isFine ? Color.White : Color.Red, 15, "Default:13", FontAlign.Center);
+                    testPos, isFine ? Color.White : Color.Red, 15, fontName, FontAlign.Center);
                 Graphics.DrawBox(new RectangleF(testPos.X - textSize.X / 2 - 5, testPos.Y, textSize.X + 10, textSize.Y),
                     Color.Black);
             }
@@ -429,6 +449,8 @@ namespace HarvestHelpers
                 _objects[entity.Id] = new HarvestSeed(entity, _mapController);
             else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/StorageTank")
                 _objects[entity.Id] = new HarvestTank(entity, _mapController);
+            else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/StorageTankAdvanced")
+                _objects[entity.Id] = new HarvestTankAdvanced(entity, _mapController);
             else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/Extractor")
                 _objects[entity.Id] = new HarvestCollector(entity, _mapController);
             else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/Irrigator"

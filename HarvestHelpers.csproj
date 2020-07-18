@@ -63,6 +63,7 @@
     <Compile Include="HarvestObjects\HarvestHorticraft.cs" />
     <Compile Include="HarvestObjects\HarvestPylon.cs" />
     <Compile Include="HarvestObjects\HarvestSeed.cs" />
+    <Compile Include="HarvestObjects\HarvestTankAdvanced.cs" />
     <Compile Include="HarvestObjects\HarvestTank.cs" />
     <Compile Include="MapController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

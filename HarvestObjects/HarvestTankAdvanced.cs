@@ -6,14 +6,14 @@ using SharpDX;
 
 namespace HarvestHelpers.HarvestObjects
 {
-    public class HarvestTank : HarvestObject
+    public class HarvestTankAdvanced : HarvestObject
     {
-        public HarvestTank(Entity entity, MapController mapController) : base(entity, mapController)
+        public HarvestTankAdvanced(Entity entity, MapController mapController) : base(entity, mapController)
         {
         }
 
 
-        public override string ObjectName { get; } = "Tank";
+        public override string ObjectName { get; } = "TankAdvanced";
 
         public override void Draw()
         {
@@ -21,7 +21,7 @@ namespace HarvestHelpers.HarvestObjects
                 return;
 
             MapController.DrawBoxOnMap(ScreenDrawPos, 0.8f, EnergyColor);
-            MapController.DrawTextOnMap("s", ScreenDrawPos, Color.Black, 150, FontAlign.Center);
+            MapController.DrawTextOnMap("S", ScreenDrawPos, Color.Black, 150, FontAlign.Center);
         }
     }
 }
