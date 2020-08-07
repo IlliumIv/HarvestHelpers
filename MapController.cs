@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using ExileCore.PoEMemory.MemoryObjects;
 using ExileCore.Shared.Enums;
+using ExileCore.Shared.Helpers;
 using Color = SharpDX.Color;
 using Graphics = ExileCore.Graphics;
 using RectangleF = SharpDX.RectangleF;
@@ -92,7 +93,7 @@ namespace HarvestHelpers
                 screenPos.Y -= _graphics.MeasureText(text, height).Y / 2;
             }
 
-            _graphics.DrawText(text, screenPos, color, height, align);
+            _graphics.DrawText(text, screenPos.TranslateToNum(), color, height, HarvestHelpersCore.fontName, align);
         }
 
         public void DrawLine(SharpDX.Vector2 p1, SharpDX.Vector2 p2, float lineWidth, Color color)

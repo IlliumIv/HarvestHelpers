@@ -6,22 +6,22 @@ using SharpDX;
 
 namespace HarvestHelpers.HarvestObjects
 {
-    public class HarvestTank : HarvestObject
+    public class HarvestHorticraft: HarvestObject
     {
-        public HarvestTank(Entity entity, MapController mapController) : base(entity, mapController)
+        public HarvestHorticraft(Entity entity, MapController mapController) : base(entity, mapController)
         {
         }
 
 
-        public override string ObjectName { get; } = "Tank";
+        public override string ObjectName { get; } = "Horticraft";
 
         public override void Draw()
         {
-            if (!MapController.Settings.DrawStorage)
+            if (!MapController.Settings.DrawHorticrafting)
                 return;
 
             MapController.DrawBoxOnMap(ScreenDrawPos, 0.8f, EnergyColor);
-            MapController.DrawTextOnMap("s", ScreenDrawPos, Color.Black, 150, FontAlign.Center);
+            MapController.DrawTextOnMap("H", ScreenDrawPos, Color.Black, 150, FontAlign.Center);
         }
     }
 }

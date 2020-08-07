@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -42,6 +44,8 @@ namespace HarvestHelpers
         private readonly long[] _fluidCapacity = new long[3];
         private readonly Color[] _fluidColors;
 
+        public static string fontName;
+
         public HarvestHelpersCore()
         {
             _fluidColors = new[]
@@ -59,7 +63,24 @@ namespace HarvestHelpers
             Input.RegisterKey(Settings.Toggle.Value);
             Settings.FixOutOfScreen.OnPressed += FixOutOfScreen;
             ResetCenter();
+
+            UseDefaultFont_OnValueChanged(Settings.UseDefaultFont, Settings.UseDefaultFont.Value);
+            Settings.UseDefaultFont.OnValueChanged += UseDefaultFont_OnValueChanged;
+
             return true;
+        }
+
+        private void UseDefaultFont_OnValueChanged(object sender, bool e)
+        {
+            switch (e) {
+                case true:
+                    fontName = "Default:13";
+                    break;
+                case false:
+                    var font = Graphics.Font.Name.Substring(6);
+                    fontName = $"{font.Substring(0, font.Length - 4)}:{Graphics.Font.Size}";
+                    break;
+            }
         }
 
         private void FixOutOfScreen()
@@ -84,6 +105,7 @@ namespace HarvestHelpers
         {
             if (Settings.ShowInInvent.Value)
                 DrawInventSeeds();
+
             var isOnMap = Vector2.Distance(GameController.Player.GridPos, _groveCenter) < 400;
             if (!isOnMap)
             {
@@ -103,7 +125,7 @@ namespace HarvestHelpers
             }
 
             Graphics.DrawText($"Hide: press '{Settings.Toggle.Value}' button",
-                new nuVector2(Settings.PosX, Settings.PosY - 17), Color.White);
+                new nuVector2(Settings.PosX, Settings.PosY - 17), Color.White, fontName);
 
             ImGui.SetNextWindowPos(new nuVector2(Settings.PosX, Settings.PosY), ImGuiCond.Once, nuVector2.Zero);
             ImGui.SetNextWindowSize(new nuVector2(Settings.Width - 20, Settings.Height), ImGuiCond.Always);
@@ -139,33 +161,37 @@ namespace HarvestHelpers
 
         private void DrawInventSeeds()
         {
-            var skillRect = GameController.Game.IngameState.IngameUi.SkillBar.GetClientRect();
-            var drawRect = skillRect;
+            var inventoryRect = GameController.Game.IngameState.IngameUi.InventoryPanel.GetChildAtIndex(2).GetClientRect();
+            var drawRect = inventoryRect;
+            drawRect.Y += inventoryRect.Height;
+            drawRect.X += 10;
             drawRect.Width = 50;
             drawRect.Height = 20;
-            drawRect.Y -= 40;
-            drawRect.X += 100;
 
             for (var i = 0; i < 3; i++)
             {
                 Graphics.DrawBox(drawRect, _fluidColors[i]);
-                Graphics.DrawText(_inventSeeds[i].ToString(), drawRect.Center.Translate(0, -6), Color.Black,
+                Graphics.DrawText(_inventSeeds[i].ToString(), drawRect.Center.Translate(0, -6), Color.Black, fontName, 
                     FontAlign.Center);
                 drawRect.X += drawRect.Width;
             }
 
-            if (_inventSeedsDelayStopwatch.ElapsedMilliseconds < 2000)
+            if (_inventSeedsDelayStopwatch.ElapsedMilliseconds < 500)
                 return;
             _inventSeedsDelayStopwatch.Restart();
 
-            var items =
+            var inventoryItems =
                 GameController.Game.IngameState.ServerData.GetPlayerInventoryBySlot(InventorySlotE.MainInventory1);
+
+            var seedStockPile = GameController.Game.IngameState.ServerData.PlayerInventories[42].Inventory;
+
+            var items = inventoryItems.Items.Concat(seedStockPile.Items);
 
             _inventSeeds[0] = 0;
             _inventSeeds[1] = 0;
             _inventSeeds[2] = 0; //just for T1
 
-            foreach (var item in items.Items)
+            foreach (var item in items)
             {
                 var metadata = item.Metadata;
 
@@ -214,7 +240,7 @@ namespace HarvestHelpers
             _mapController.Draw(mapDrawFrame);
 
             Graphics.DrawText("Resize ->", new nuVector2(mapDrawFrame.Right - 80, mapDrawFrame.Bottom - 15),
-                Color.White);
+                Color.White, fontName);
 
             var playerPos = GameController.Player.GridPos;
             var drawPos = _mapController.GridPosToMapPos(playerPos);
@@ -260,11 +286,11 @@ namespace HarvestHelpers
             if (_errorStringBuilder.Length > 0)
                 Graphics.DrawText(_errorStringBuilder.ToString(),
                     new nuVector2(10, 200),
-                    Color.Red);
+                    Color.Red, fontName);
 
             var windowRectangle = GameController.Window.GetWindowRectangle();
             var drawPos = new Vector2(windowRectangle.X + windowRectangle.Width / 2, windowRectangle.Height - 50);
-            var barWidth = 200f;
+            var barWidth = Settings.StorageBoxWidth;
 
             for (var i = 0; i < 3; i++)
             {
@@ -273,6 +299,9 @@ namespace HarvestHelpers
                 var isFine = result > 0;
 
                 Graphics.DrawBox(rect, Color.DimGray);
+
+                // Nice to know what color it is if no progress bar
+                Graphics.DrawFrame(rect, _fluidColors[i], 1);
 
                 var progressDelta = (float) _fluidAmount[i] / _fluidCapacity[i];
                 var progressRect = rect;
@@ -283,13 +312,13 @@ namespace HarvestHelpers
 
                 var testPos = new nuVector2(rect.X + 5, rect.Y - 15);
                 var textSize = Graphics.DrawText($"Required:{_requiredFluid[i]}",
-                    testPos, isFine ? Color.White : Color.Red);
+                    testPos, isFine ? Color.White : Color.Red, fontName);
                 Graphics.DrawBox(new RectangleF(testPos.X, testPos.Y, textSize.X, textSize.Y), Color.Black);
 
                 var center = rect.Center;
                 testPos = new nuVector2(center.X, center.Y - 7);
                 textSize = Graphics.DrawText($"Fill: {progressDelta:P1} ({_fluidAmount[i]} of {_fluidCapacity[i]})",
-                    testPos, isFine ? Color.White : Color.Red, 15, FontAlign.Center);
+                    testPos, isFine ? Color.White : Color.Red, 15, fontName, FontAlign.Center);
                 Graphics.DrawBox(new RectangleF(testPos.X - textSize.X / 2 - 5, testPos.Y, textSize.X + 10, textSize.Y),
                     Color.Black);
             }
@@ -334,6 +363,12 @@ namespace HarvestHelpers
 
             buttonPos.Y += 20;
             Settings.DrawSeeds = DrawButton("O", buttonPos, Settings.DrawSeeds);
+
+            buttonPos.Y += 20;
+            Settings.DrawHorticrafting = DrawButton("H", buttonPos, Settings.DrawHorticrafting);
+
+            buttonPos.Y += 20;
+            Settings.DrawFlower = DrawButton("F", buttonPos, Settings.DrawFlower);
         }
 
         private bool DrawButton(string name, Vector2 pos, bool value)
@@ -359,6 +394,8 @@ namespace HarvestHelpers
                 _objects[entity.Id] = new HarvestSeed(entity, _mapController);
             else if (entity.Path.StartsWith("Metadata/MiscellaneousObjects/Harvest/StorageTank"))
                 _objects[entity.Id] = new HarvestTank(entity, _mapController);
+            else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/StorageTankAdvanced")
+                _objects[entity.Id] = new HarvestTankAdvanced(entity, _mapController);
             else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/Extractor")
                 _objects[entity.Id] = new HarvestCollector(entity, _mapController);
             else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/Irrigator"
@@ -368,6 +405,10 @@ namespace HarvestHelpers
                 _objects[entity.Id] = new HarvestPylon(entity, _mapController);
             else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/HarvestPipeBeamEffect")
                 _objects[entity.Id] = new HarvestBeamLink(entity, _mapController);
+            else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/CraftingSilo")
+                _objects[entity.Id] = new HarvestHorticraft(entity, _mapController);
+            else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/HarvestPlantBooster")
+                _objects[entity.Id] = new HarvestFlower(entity, _mapController);
             else if (entity.Path == "Metadata/Terrain/Leagues/Harvest/Objects/SoulTree")
             {
                 _groveCenter = entity.GridPos;

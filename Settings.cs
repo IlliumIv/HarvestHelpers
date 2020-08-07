@@ -12,6 +12,9 @@ namespace HarvestHelpers
         [Menu("Update interval (milliseconds)")]
         public RangeNode<int> UpdateDelayMs { get; set; } = new RangeNode<int>(1000, 0, 10000);
 
+        [Menu("Storage Tank Width")]
+        public RangeNode<float> StorageBoxWidth { get; set; } = new RangeNode<float>(200f, 0f, 1000f);
+
         public float PosX { get; set; } = 100;
         public float PosY { get; set; } = 100;
         public float Width { get; set; } = 500;
@@ -27,11 +30,16 @@ namespace HarvestHelpers
         public ToggleNode ShowInInvent { get; set; } = new ToggleNode(true);
         public bool IsShown { get; set; }
 
+        [Menu("Use default font")]
+        public ToggleNode UseDefaultFont { get; set; } = new ToggleNode(false);
+
         public bool DrawDispensers { get; set; }
         public bool DrawPylons { get; set; } = true;
         public bool DrawCollectors { get; set; } = true;
         public bool DrawStorage { get; set; } = true;
         public bool DrawLinks { get; set; } = true;
         public bool DrawSeeds { get; set; } = true;
+        public bool DrawHorticrafting { get; set; } = true;
+        public bool DrawFlower { get; set; } = true;
     }
 }
