@@ -103,7 +103,7 @@ namespace HarvestHelpers
 
         public override void Render()
         {
-            if (Settings.ShowInInvent.Value)
+            if (Settings.ShowInInvent.Value && GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible)
                 DrawInventSeeds();
 
             var isOnMap = Vector2.Distance(GameController.Player.GridPos, _groveCenter) < 400;
@@ -392,7 +392,7 @@ namespace HarvestHelpers
 
             if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/MonsterSeed")
                 _objects[entity.Id] = new HarvestSeed(entity, _mapController);
-            else if (entity.Path.StartsWith("Metadata/MiscellaneousObjects/Harvest/StorageTank"))
+            else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/StorageTank")
                 _objects[entity.Id] = new HarvestTank(entity, _mapController);
             else if (entity.Path == "Metadata/MiscellaneousObjects/Harvest/StorageTankAdvanced")
                 _objects[entity.Id] = new HarvestTankAdvanced(entity, _mapController);
