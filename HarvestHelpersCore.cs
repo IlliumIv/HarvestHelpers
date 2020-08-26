@@ -103,8 +103,7 @@ namespace HarvestHelpers
 
         public override void Render()
         {
-            if (Settings.ShowInInvent.Value && GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible)
-                DrawInventSeeds();
+            DrawInventSeeds();
 
             var isOnMap = Vector2.Distance(GameController.Player.GridPos, _groveCenter) < 400;
             if (!isOnMap)
@@ -161,19 +160,35 @@ namespace HarvestHelpers
 
         private void DrawInventSeeds()
         {
-            var inventoryRect = GameController.Game.IngameState.IngameUi.InventoryPanel.GetChildAtIndex(2).GetClientRect();
-            var drawRect = inventoryRect;
-            drawRect.Y += inventoryRect.Height;
-            drawRect.X += 10;
-            drawRect.Width = 50;
-            drawRect.Height = 20;
+            RectangleF drawRect;
+            var inventoryIsVisible = GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible;
 
-            for (var i = 0; i < 3; i++)
+            if (Settings.HideInInventory && inventoryIsVisible)
             {
-                Graphics.DrawBox(drawRect, _fluidColors[i]);
-                Graphics.DrawText(_inventSeeds[i].ToString(), drawRect.Center.Translate(0, -6), Color.Black, fontName, 
-                    FontAlign.Center);
-                drawRect.X += drawRect.Width;
+                drawRect = GameController.Game.IngameState.IngameUi.InventoryPanel.GetChildAtIndex(2).GetClientRect();
+                drawRect.Y += drawRect.Height;
+                drawRect.X += 10;
+                drawRect.Width = 50;
+                drawRect.Height = 20;
+            }
+            else
+            {
+                drawRect = GameController.Game.IngameState.IngameUi.SkillBar.GetClientRect();
+                drawRect.Width = 50;
+                drawRect.Height = 20;
+                drawRect.Y -= 40;
+                drawRect.X += 100;
+            }
+
+            if (!(Settings.HideInInventory && !_inventSeeds.Any(x => x > 23) && !inventoryIsVisible))
+            {
+                for (var i = 0; i < 3; i++)
+                {
+                    Graphics.DrawBox(drawRect, _fluidColors[i]);
+                    Graphics.DrawText(_inventSeeds[i].ToString(), drawRect.Center.Translate(0, -6), Color.Black, fontName,
+                        FontAlign.Center);
+                    drawRect.X += drawRect.Width;
+                }
             }
 
             if (_inventSeedsDelayStopwatch.ElapsedMilliseconds < 500)

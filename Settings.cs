@@ -26,8 +26,8 @@ namespace HarvestHelpers
         [Menu("Hide toggle")]
         public HotkeyNode Toggle { get; set; } = new HotkeyNode(Keys.Oemtilde);
 
-        [Menu("Count seeds in inventory")]
-        public ToggleNode ShowInInvent { get; set; } = new ToggleNode(true);
+        [Menu("Hide seeds counter in inventory")]
+        public ToggleNode HideInInventory { get; set; } = new ToggleNode(true);
         public bool IsShown { get; set; }
 
         [Menu("Use default font")]
